@@ -18,8 +18,13 @@ int save_file(EditorState *editor)
     FILE *file = fopen(editor->filename, "w");
     if (file == NULL) return -1;
 
-    char * str = editor->buffer;
-    int itemswritten = fwrite(str, sizeof(char), editor->cursor_x * (editor->cursor_y+1), file);
+    int totalChars = 0;
+    for (int i = 0; i < editor->screen_rows * editor->screen_cols; i++) 
+    {
+        if (editor->buffer[i] != '\0') totalChars++;
+    }
+
+    int itemswritten = fwrite(editor->buffer, sizeof(char), totalChars, file);
     fclose(file);
 
     if (itemswritten < editor->cursor_x * (editor->cursor_y+1)) {

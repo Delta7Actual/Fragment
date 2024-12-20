@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-void init_editor(EditorState *editor, char * filename) {
+void init_editor(EditorState *editor, char * filename)
+{
     editor->cursor_x = 0;
     editor->cursor_y = 0;
     editor->dirty = 0;
@@ -36,21 +37,26 @@ void init_editor(EditorState *editor, char * filename) {
 }
 
 
-int process_input(EditorState *editor, int ch) {
+int process_input(EditorState *editor, int ch)
+{
     if (ch == CTRL('X'))
     {
-        return 1;
+        return 1; // Exit
     }
     if (ch == CTRL('D'))
     {
         save_file(editor);
         editor->dirty = 0;
-        // open_file(editor, editor->filename);
+        return 0;
+    }
+    if (ch == CTRL('W'))
+    {
+        editor->mode = (editor->mode == STANDARD) ? MOVE : STANDARD;
         return 0;
     }
 
-
-    if (ch >= 32 && ch <= 126) { // Printable characters
+    if (ch >= 32 && ch <= 126) // Printable characters
+    {
         int pos = editor->cursor_y * editor->screen_cols + editor->cursor_x;
         editor->buffer[pos] = ch;
 
@@ -66,6 +72,7 @@ int process_input(EditorState *editor, int ch) {
     }
     else if (ch == KEY_BACKSPACE || ch == 127 || ch == '\b')
     {
+        // Move the cursor
         if (editor->cursor_y > 0 || editor->cursor_x > 0) 
         {
             if (editor->cursor_x == 0) {
@@ -76,8 +83,34 @@ int process_input(EditorState *editor, int ch) {
             }
         }    
 
-        int pos = (editor->cursor_y * editor->screen_cols + editor->cursor_x);
+        int pos = editor->cursor_y * editor->screen_cols + editor->cursor_x;
         editor->buffer[pos] = ' ';
+    }
+    else if(ch == '\n' || ch == '\r')
+    {
+        int pos = editor->cursor_y * editor->screen_cols + editor->cursor_x;
+        int lastPos = pos + (editor->screen_cols - editor->cursor_x);
+
+        // Pad the rest of the line with spaces
+        for (int i = pos; i < lastPos; i++)
+        {
+            editor->buffer[i] = ' ';
+        }
+
+        // Add newline character
+        editor->buffer[lastPos - 1] = '\n';
+
+        // Move the cursor to the next line
+        if (editor->cursor_y < editor->screen_rows - 1)
+        {
+            editor->cursor_y++;
+            editor->cursor_x = 0;
+        }
+        else
+        {
+            editor->cursor_y = editor->screen_rows - 1; // Stay at the bottom
+            // Optional: implement scrolling here if needed
+        }
     }
 
     editor->dirty = 1;
@@ -89,12 +122,13 @@ void render_screen(const EditorState *editor)
 {
     clear();
 
-    for (int row = 0; row < editor->screen_rows; row++) {
+    for (int row = 0; row < editor->screen_rows; row++)
+    {
         mvprintw(row, 0, "%.*s", editor->screen_cols,
                  editor->buffer + row * editor->screen_cols);
     }
     printw("%d,%d", editor->cursor_x, editor->cursor_y);
-    char *status_line = createll(editor->filename, editor->dirty, STANDARD, editor->cursor_x, editor->cursor_y);
+    char *status_line = createll(editor->filename, editor->dirty, editor->mode, editor->cursor_x, editor->cursor_y);
     printll(stdscr, status_line, editor->screen_rows, editor->screen_cols);
     free(status_line);
 

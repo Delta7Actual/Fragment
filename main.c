@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "editor.h"
-#include "io.h"
 
 void init();
 
