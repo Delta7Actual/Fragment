@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-void init_editor(EditorState *editor, char * filename)
+int handle_standard(EditorState * editor, int ch);
+int handle_move(EditorState * editor, char ch);
+
+void init_editor(EditorState * editor, char * filename)
 {
     editor->cursor_x = 0;
     editor->cursor_y = 0;
@@ -37,7 +40,7 @@ void init_editor(EditorState *editor, char * filename)
 }
 
 
-int process_input(EditorState *editor, int ch)
+int process_input(EditorState * editor, int ch)
 {
     if (ch == CTRL('X'))
     {
@@ -55,6 +58,14 @@ int process_input(EditorState *editor, int ch)
         return 0;
     }
 
+    if (editor->mode == STANDARD) return handle_standard(editor, ch);
+    if (editor->mode == MOVE) return handle_move(editor, ch);
+    
+    return -1;
+}
+
+int handle_standard(EditorState * editor, int ch)
+{
     if (ch >= 32 && ch <= 126) // Printable characters
     {
         int pos = editor->cursor_y * editor->screen_cols + editor->cursor_x;
@@ -117,8 +128,56 @@ int process_input(EditorState *editor, int ch)
     return 0;
 }
 
+int handle_move(EditorState * editor, char ch)
+{
+    if (ch == 'w' || ch == 'W')
+    {
+        if (editor->cursor_y > 0)
+        {
+            editor->cursor_y--;
+        }
+    }
+    else if (ch == 'd' || ch == 'D')
+    {
+        if (editor->cursor_x < editor->screen_cols - 1)
+        {
+            editor->cursor_x++;
+        }
+        else
+        {
+            if (editor->cursor_y < editor->screen_rows - 1)
+            {
+                editor->cursor_y++;
+                editor->cursor_x = 0;
+            }
+        }
+    }
+    else if (ch == 's' || ch == 'S')
+    {
+        if (editor->cursor_y < editor->screen_rows - 1)
+        {
+            editor->cursor_y++;
+        }
+    }
+    else if (ch == 'a' || ch == 'A')
+    {
+        if (editor->cursor_x > 0)
+        {
+            editor->cursor_x--;
+        }
+        else
+        {
+            if (editor->cursor_y > 0)
+            {
+                editor->cursor_y--;
+                editor->cursor_x = editor->screen_cols - 1;
+            }
+        }
+    }
+    return 0;  
+}
 
-void render_screen(const EditorState *editor) 
+void render_screen(const EditorState * editor) 
 {
     clear();
 

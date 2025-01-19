@@ -4,5 +4,12 @@
         "ncurses.h": "c",
         "string.h": "c",
         "tuple": "c"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/mnt/d/LinuxCoding/c_programs/texteditor/bin",
+            "binaryPath": "/mnt/d/LinuxCoding/c_programs/texteditor/bin/text_editor",
+            "binaryArgs": []
+        }
+    ]
 }
